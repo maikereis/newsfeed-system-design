@@ -14,4 +14,14 @@ Este repositório documenta o processo completo de _system design_ para um siste
 - Documentar decisões técnicas de forma clara
 - Explorar trade-offs arquiteturais
 
+## Escopo do Sistema
 
+- Publicação de posts (texto, imagens, vídeos)
+- Feed cronológico de posts.
+- Interações (curtidas, comentários)
+- Conexões (follow/unfollow)
+- Notificação (atualizações sobre curtidas, comentários, follows)
+
+## Documentação
+
+1. [Requisitos](docs/01-requirements.md) - Requisitos funcionais e não-funcionais
