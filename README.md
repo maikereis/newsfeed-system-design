@@ -21,3 +21,7 @@ Este repositório documenta o processo completo de _system design_ para um siste
 - Interações (curtidas, comentários)
 - Conexões (follow/unfollow)
 - Notificação (atualizações sobre curtidas, comentários, follows)
+
+## Documentação
+
+1. [Requisitos](docs/01-requirements.md) - Requisitos funcionais e não-funcionais
