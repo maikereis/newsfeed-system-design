@@ -25,3 +25,4 @@ Este repositório documenta o processo completo de _system design_ para um siste
 ## Documentação
 
 1. [Requisitos](docs/01-requirements.md) - Requisitos funcionais e não-funcionais
+2. [Estimativa de Capacidade](docs/02-capacity-estimation.md) - Cálculos de escala
