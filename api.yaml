@@ -1,93 +1,35 @@
 openapi: 3.0.0
 info:
-  title: Post Interactions API
+  title: Notifications API
   version: 0.0.1
 
 paths:
-
-  /posts/{postId}:
+  /notifications:
     get:
-      summary: Get a post by id (including interaction counts)
+      summary: List user notifications
       security:
         - bearerAuth: []
       parameters:
-        - name: postId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Post retrieved
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Post"
-        "401":
-          description: Unauthorized
-        "404":
-          description: Post not found
-
-  /posts/{postId}/likes:
-    post:
-      summary: Like a post
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: postId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "204":
-          description: Liked
-        "401":
-          description: Unauthorized
-
-    delete:
-      summary: Unlike a post
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: postId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "204":
-          description: Unliked
-        "401":
-          description: Unauthorized
-
-  /posts/{postId}/comments:
-    get:
-      summary: List comments for a post
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: postId
-          in: path
-          required: true
-          schema:
-            type: string
         - name: limit
           in: query
           schema:
             type: integer
             minimum: 1
             maximum: 50
-          description: >
-            Number of comments to return (default: 20)
+          description: Number of notifications to return (default 5)
         - name: cursor
           in: query
           schema:
             type: string
-          description: Pagination cursor for incremental loading
+          description: Pagination cursor
+        - name: onlyUnread
+          in: query
+          schema:
+            type: boolean
+          description: Return only unread notifications
       responses:
         "200":
-          description: Comments list
+          description: Notifications list
           content:
             application/json:
               schema:
@@ -96,75 +38,66 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Comment"
+                      $ref: "#/components/schemas/Notification"
                   nextCursor:
                     type: string
                     nullable: true
         "401":
           description: Unauthorized
 
+  /notifications/{notificationId}/read:
     post:
-      summary: Add a comment to a post
+      summary: Mark a notification as read
       security:
         - bearerAuth: []
       parameters:
-        - name: postId
+        - name: notificationId
           in: path
           required: true
           schema:
             type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateCommentRequest"
       responses:
-        "201":
-          description: Comment created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Comment"
-        "400":
-          description: Bad Request
-        "401":
-          description: Unauthorized
-
-  /posts/{postId}/share:
-    post:
-      summary: Share a post to the user's own feed
-      description: >
-        Creates a new post that references the original one.
-        The shared post may include optional user text.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: postId
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SharePostRequest"
-      responses:
-        "201":
-          description: Post shared
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SharedPost"
+        "204":
+          description: Marked as read
         "401":
           description: Unauthorized
         "404":
-          description: Post not found
+          description: Notification not found
+
+  /notifications/read-all:
+    post:
+      summary: Mark all notifications as read
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: All marked as read
+        "401":
+          description: Unauthorized
+
+  /ws/notifications:
+    get:
+      summary: Real-time notifications via WebSocket
+      description: >
+        Opens a WebSocket connection that streams notification events 
+        in real time.
+
+        **Message Format:**
+        All server-sent messages follow the `RealTimeNotification` schema.
+      security:
+        - bearerAuth: []
+      responses:
+        "101":
+          description: Switching protocols
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RealTimeNotification"
+              x-streaming: true
+        "401":
+          description: Unauthorized
 
 components:
-
   securitySchemes:
     bearerAuth:
       type: http
@@ -172,87 +105,55 @@ components:
       bearerFormat: JWT
 
   schemas:
+    NotificationType:
+      type: string
+      enum:
+        - POST_LIKED
+        - POST_COMMENTED
+        - NEW_FOLLOWER
 
-    InteractionCounts:
-      type: object
-      properties:
-        likes:
-          type: integer
-          example: 123
-        comments:
-          type: integer
-          example: 4
-        shares:
-          type: integer
-          example: 7
-
-    Post:
+    UserSummary:
       type: object
       properties:
         id:
           type: string
-        author_id:
+        username:
           type: string
-        title:
+        avatar_url:
           type: string
-        content:
-          type: string
-        media_urls:
-          type: array
-          items:
-            type: string
-            format: uri
-        created_at:
-          type: string
-          format: date-time
-        interaction_counts:
-          $ref: "#/components/schemas/InteractionCounts"
+          nullable: true
+          format: uri
 
-    CreateCommentRequest:
-      type: object
-      required:
-        - text
-      properties:
-        text:
-          type: string
-          maxLength: 1000
-
-    Comment:
+    Notification:
       type: object
       properties:
         id:
           type: string
-        post_id:
-          type: string
-        user_id:
-          type: string
-        text:
-          type: string
+        type:
+          $ref: "#/components/schemas/NotificationType"
         created_at:
           type: string
           format: date-time
+        is_read:
+          type: boolean
+        actor:
+          $ref: "#/components/schemas/UserSummary"
+        metadata:
+          type: object
+          description: Additional info depending on notification type
+          properties:
+            post_id:
+              type: string
+              nullable: true
+            comment_id:
+              type: string
+              nullable: true
 
-    SharePostRequest:
+    RealTimeNotification:
       type: object
+      description: Payload sent over WebSocket on notification events
       properties:
-        text:
-          type: string
-          maxLength: 2200
-      description: Optional user text when sharing a post
-
-    SharedPost:
-      type: object
-      properties:
-        id:
-          type: string
-        original_post_id:
-          type: string
-        user_id:
-          type: string
-        text:
-          type: string
-        created_at:
-          type: string
-          format: date-time
-        interaction_counts:
-          $ref: "#/components/schemas/InteractionCounts"
+        event:
+          $ref: "#/components/schemas/NotificationType"
+        data:
+          $ref: "#/components/schemas/Notification"
