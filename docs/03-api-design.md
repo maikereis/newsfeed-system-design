@@ -10,11 +10,11 @@ Este documento define os contratos de API do sistema de NewsFeed.
 openapi: 3.0.0
 info:
   title: Account Management API
-  version: 0.0.0
+  version: 0.0.1
 
 paths:
 
-  /login:
+  /v1/login:
     post:
       summary: Authenticate and receive an access token
       requestBody:
@@ -35,7 +35,7 @@ paths:
         "401":
           description: Invalid credentials
 
-  /me:
+  /v1/me:
     get:
       summary: Get authenticated account profile
       security:
@@ -50,7 +50,7 @@ paths:
         "401":
           description: Unauthorized
 
-  /accounts/{accountId}:
+  /v1/accounts/{accountId}:
     get:
       summary: Get an account profile
       security:
@@ -85,7 +85,7 @@ paths:
         "204":
           description: Deleted
 
-  /accounts:
+  /v1/accounts:
     post:
       summary: Create an Account
       requestBody:
@@ -104,7 +104,7 @@ paths:
         "400":
           description: Bad Request
 
-  /accounts/{accountId}/follow:
+  /v1/accounts/{accountId}/follow:
     post:
       summary: Follow another account
       security:
@@ -222,10 +222,10 @@ components:
 openapi: 3.0.0
 info:
   title: Post Management API
-  version: 0.0.0
+  version: 0.0.1
 
 paths:
-  /posts:
+  /v1/posts:
     post:
       summary: Create a post
       security:
@@ -264,7 +264,7 @@ paths:
         "401":
           description: Unauthorized
 
-  /posts/{postId}:
+  /v1/posts/{postId}:
     patch:
       summary: Update a post
       description: Allows users to edit their own posts.
@@ -315,7 +315,7 @@ paths:
         "403":
           description: Forbidden - user cannot delete this post
 
-  /posts/{postId}/comments:
+  /v1/posts/{postId}/comments:
     post:
       summary: Add a comment to a post
       security:
@@ -344,7 +344,7 @@ paths:
         "401":
           description: Unauthorized
 
-  /posts/{postId}/likes:
+  /v1/posts/{postId}/likes:
     post:
       summary: Like a post
       security:
@@ -445,11 +445,11 @@ components:
 openapi: 3.0.0
 info:
   title: Feed Management API
-  version: 0.0.0
+  version: 0.0.1
 
 paths:
 
-  /feed:
+  /v1/feed:
     get:
       summary: Get the authenticated user's feed
       description: >
@@ -488,11 +488,11 @@ paths:
                   nextCursor:
                     type: string
                     nullable: true
-                    description: Cursor for the next page or null if no more posts
+                    description: Cursor for the next page or null if no more posts  
         "401":
           description: Unauthorized
 
-  /feed/updates:
+  /v1/feed/updates:
     get:
       summary: Check for new posts in the feed
       description: >
@@ -578,11 +578,11 @@ components:
 openapi: 3.0.0
 info:
   title: Post Interactions API
-  version: 0.0.0
+  version: 0.0.1
 
 paths:
 
-  /posts/{postId}:
+  /v1/posts/{postId}:
     get:
       summary: Get a post by id (including interaction counts)
       security:
@@ -605,7 +605,7 @@ paths:
         "404":
           description: Post not found
 
-  /posts/{postId}/likes:
+  /v1/posts/{postId}/likes:
     post:
       summary: Like a post
       security:
@@ -638,7 +638,7 @@ paths:
         "401":
           description: Unauthorized
 
-  /posts/{postId}/comments:
+  /v1/posts/{postId}/comments:
     get:
       summary: List comments for a post
       security:
@@ -708,7 +708,7 @@ paths:
         "401":
           description: Unauthorized
 
-  /posts/{postId}/share:
+  /v1/posts/{postId}/share:
     post:
       summary: Share a post to the user's own feed
       description: >
@@ -844,7 +844,7 @@ info:
   version: 0.0.1
 
 paths:
-  /notifications:
+  /v1/notifications:
     get:
       summary: List user notifications
       security:
@@ -885,7 +885,7 @@ paths:
         "401":
           description: Unauthorized
 
-  /notifications/{notificationId}/read:
+  /v1/notifications/{notificationId}/read:
     post:
       summary: Mark a notification as read
       security:
@@ -904,7 +904,7 @@ paths:
         "404":
           description: Notification not found
 
-  /notifications/read-all:
+  /v1/notifications/read-all:
     post:
       summary: Mark all notifications as read
       security:
@@ -915,7 +915,7 @@ paths:
         "401":
           description: Unauthorized
 
-  /ws/notifications:
+  /ws/v1/notifications:
     get:
       summary: Real-time notifications via WebSocket
       description: >
