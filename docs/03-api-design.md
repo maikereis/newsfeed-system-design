@@ -215,3 +215,228 @@ components:
           type: boolean
           description: Whether the requester follows this account (optional)
 ```
+
+### Gerenciamento de Post
+
+```yaml
+openapi: 3.0.0
+info:
+  title: Post Management API
+  version: 0.0.0
+
+paths:
+  /posts:
+    post:
+      summary: Create a post
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - title
+                - text
+              properties:
+                title:
+                  type: string
+                  maxLength: 100
+                text:
+                  type: string
+                  maxLength: 2200
+                media:
+                  type: array
+                  maxItems: 20
+                  items:
+                    type: string
+                    format: binary
+              description: >
+                Allowed media: images up to 10MB each, videos up to 60s and total videos size up to 4GB
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+
+  /posts/{postId}:
+    patch:
+      summary: Update a post
+      description: Allows users to edit their own posts.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePostRequest"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - user cannot edit this post
+
+    delete:
+      summary: Delete a post
+      description: Allows users to delete their own posts.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - user cannot delete this post
+
+  /posts/{postId}/comments:
+    post:
+      summary: Add a comment to a post
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCommentRequest"
+      responses:
+        "201":
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+
+  /posts/{postId}/likes:
+    post:
+      summary: Like a post
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Liked
+        "401":
+          description: Unauthorized
+
+    delete:
+      summary: Unlike a post
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Unliked
+        "401":
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UpdatePostRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 100
+        text:
+          type: string
+          maxLength: 2200
+      description: At least one field must be provided
+
+    CreateCommentRequest:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          maxLength: 1000
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+        post_id:
+          type: string
+        user_id:
+          type: string
+        text:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        media_urls:
+          type: array
+          items:
+            type: string
+            format: uri
+        created_at:
+          type: string
+          format: date-time
+```
