@@ -440,3 +440,136 @@ components:
           type: string
           format: date-time
 ```
+
+### Gerenciamento de Feed
+
+```yaml
+openapi: 3.0.0
+info:
+  title: Feed Management API
+  version: 0.0.0
+
+paths:
+
+  /feed:
+    get:
+      summary: Get the authenticated user's feed
+      description: >
+        Returns posts from the authenticated user and accounts they follow,
+        ordered by reverse chronological order (newest first).  
+        Supports incremental loading via cursor-based pagination.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+          description: Number of posts to return (default 20)
+        - name: cursor
+          in: query
+          schema:
+            type: string
+          description: >
+            Pagination cursor for incremental loading.  
+            When omitted, returns the first page.
+      responses:
+        "200":
+          description: Feed page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/FeedPost"
+                  nextCursor:
+                    type: string
+                    nullable: true
+                    description: Cursor for the next page or null if no more posts
+        "401":
+          description: Unauthorized
+
+  /feed/updates:
+    get:
+      summary: Check for new posts in the feed
+      description: >
+        Returns posts more recent than the latest post currently loaded by the client.  
+        Useful for refreshing the feed without reloading all items.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: since
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: >
+            Timestamp of the newest post the client has.  
+            When omitted, returns the most recent posts.
+            When provided, returns posts created after this timestamp.
+      responses:
+        "200":
+          description: New posts available since the given timestamp
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FeedPost"
+        "401":
+          description: Unauthorized
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    FeedPost:
+      type: object
+      properties:
+        id:
+          type: string
+        author:
+          $ref: "#/components/schemas/Author"
+        title:
+          type: string
+        content:
+          type: string
+        media_urls:
+          type: array
+          items:
+            type: string
+            format: uri
+        created_at:
+          type: string
+          format: date-time
+        likes_count:
+          type: integer
+        comments_count:
+          type: integer
+        is_liked:
+          type: boolean
+          description: Whether the authenticated user has liked this post
+
+    Author:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        avatar_url:
+          type: string
+          format: uri     
+```
