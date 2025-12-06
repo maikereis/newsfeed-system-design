@@ -573,3 +573,266 @@ components:
           type: string
           format: uri     
 ```
+
+### Gerenciamento de Interações em Posts
+
+```yaml
+openapi: 3.0.0
+info:
+  title: Post Interactions API
+  version: 0.0.0
+
+paths:
+
+  /posts/{postId}:
+    get:
+      summary: Get a post by id (including interaction counts)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Post retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Post not found
+
+  /posts/{postId}/likes:
+    post:
+      summary: Like a post
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Liked
+        "401":
+          description: Unauthorized
+
+    delete:
+      summary: Unlike a post
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Unliked
+        "401":
+          description: Unauthorized
+
+  /posts/{postId}/comments:
+    get:
+      summary: List comments for a post
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+          description: >
+            Number of comments to return (default: 20)
+        - name: cursor
+          in: query
+          schema:
+            type: string
+          description: Pagination cursor for incremental loading
+      responses:
+        "200":
+          description: Comments list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Comment"
+                  nextCursor:
+                    type: string
+                    nullable: true
+        "401":
+          description: Unauthorized
+
+    post:
+      summary: Add a comment to a post
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCommentRequest"
+      responses:
+        "201":
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+
+  /posts/{postId}/share:
+    post:
+      summary: Share a post to the user's own feed
+      description: >
+        Creates a new post that references the original one.
+        The shared post may include optional user text.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SharePostRequest"
+      responses:
+        "201":
+          description: Post shared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SharedPost"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Post not found
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    InteractionCounts:
+      type: object
+      properties:
+        likes:
+          type: integer
+          example: 123
+        comments:
+          type: integer
+          example: 4
+        shares:
+          type: integer
+          example: 7
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+        author_id:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        media_urls:
+          type: array
+          items:
+            type: string
+            format: uri
+        created_at:
+          type: string
+          format: date-time
+        interaction_counts:
+          $ref: "#/components/schemas/InteractionCounts"
+
+    CreateCommentRequest:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          maxLength: 1000
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+        post_id:
+          type: string
+        user_id:
+          type: string
+        text:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    SharePostRequest:
+      type: object
+      properties:
+        text:
+          type: string
+          maxLength: 2200
+      description: Optional user text when sharing a post
+
+    SharedPost:
+      type: object
+      properties:
+        id:
+          type: string
+        original_post_id:
+          type: string
+        user_id:
+          type: string
+        text:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        interaction_counts:
+          $ref: "#/components/schemas/InteractionCounts"
+```
