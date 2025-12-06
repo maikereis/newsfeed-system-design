@@ -233,7 +233,7 @@ paths:
       requestBody:
         required: true
         content:
-          multipart/form-data:
+          application/json:
             schema:
               type: object
               required:
@@ -246,14 +246,12 @@ paths:
                 text:
                   type: string
                   maxLength: 2200
-                media:
+                media_urls:
                   type: array
                   maxItems: 20
                   items:
                     type: string
-                    format: binary
-              description: >
-                Allowed media: images up to 10MB each, videos up to 60s and total videos size up to 4GB
+                    format: uri
       responses:
         "201":
           description: Created
